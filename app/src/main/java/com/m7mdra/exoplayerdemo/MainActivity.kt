@@ -2,17 +2,23 @@ package com.m7mdra.exoplayerdemo
 
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import com.m7mdra.exoplayerdemo.model.Surah
+import kotlinx.android.synthetic.main.activity_main.*
 import java.lang.reflect.Type
 
 class MainActivity : AppCompatActivity() {
     private var surahList = mutableListOf<Surah>()
+    private lateinit var adapter: SurahAdapter
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         loadData()
+        adapter = SurahAdapter(surahList)
+        recyclerView.adapter = adapter
+        recyclerView.addItemDecoration(DividerItemDecoration(this,DividerItemDecoration.VERTICAL))
     }
 
     private fun loadData() {
@@ -20,6 +26,8 @@ class MainActivity : AppCompatActivity() {
         val listType: Type = object : TypeToken<List<Surah>>() {}.type
         val list: List<Surah> = Gson().fromJson(readText, listType)
         surahList.addAll(list)
+
+        adapter.notifyDataSetChanged()
     }
 
 
