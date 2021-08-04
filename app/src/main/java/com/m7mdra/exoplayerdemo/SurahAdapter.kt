@@ -5,7 +5,10 @@ import android.view.ViewGroup
 import androidx.recyclerview.widget.RecyclerView
 import com.m7mdra.exoplayerdemo.model.Surah
 
-class SurahAdapter(private val list: List<Surah>) : RecyclerView.Adapter<SurahViewHolder>() {
+class SurahAdapter(
+    private val list: List<Surah>,
+    private val onClickListener: (Surah) -> Unit = {}
+) : RecyclerView.Adapter<SurahViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SurahViewHolder {
         return SurahViewHolder(
             LayoutInflater.from(parent.context).inflate(R.layout.row_surah, parent, false)
@@ -13,10 +16,13 @@ class SurahAdapter(private val list: List<Surah>) : RecyclerView.Adapter<SurahVi
     }
 
     override fun onBindViewHolder(holder: SurahViewHolder, position: Int) {
-        val (ayahs, name, number) = list[position]
-        holder.ayahCountTextView.text = "${ayahs.size} سورة"
-        holder.surahNameTextView.text = name
-        holder.surahNumberTextView.text = "$number"
+        val surah = list[position]
+        holder.rootView.setOnClickListener {
+            onClickListener.invoke(surah)
+        }
+        holder.ayahCountTextView.text = "${surah.ayahs.size} سورة"
+        holder.surahNameTextView.text = surah.name
+        holder.surahNumberTextView.text = "${surah.number}"
     }
 
     override fun getItemCount(): Int {

@@ -15,8 +15,8 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        loadData()
         adapter = SurahAdapter(surahList)
+        loadData()
         recyclerView.adapter = adapter
         recyclerView.addItemDecoration(DividerItemDecoration(this,DividerItemDecoration.VERTICAL))
     }

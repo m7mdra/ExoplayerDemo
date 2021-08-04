@@ -3,7 +3,9 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
+    android:background="?selectableItemBackgroundBorderless"
     android:layout_height="wrap_content"
+    android:id="@+id/rootView"
     android:padding="8dp">
 
     <TextView
@@ -20,7 +22,7 @@
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
         android:text="Surah name"
-        android:textColor="@android:color/black"
+        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
         android:textSize="18sp"
         app:layout_constraintEnd_toStartOf="@+id/playButton"
         app:layout_constraintStart_toEndOf="@+id/surahNumberTextView"
