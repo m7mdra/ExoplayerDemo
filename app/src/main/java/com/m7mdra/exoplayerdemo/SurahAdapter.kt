@@ -20,7 +20,7 @@ class SurahAdapter(
         holder.rootView.setOnClickListener {
             onClickListener.invoke(surah)
         }
-        holder.ayahCountTextView.text = "${surah.ayahs.size} سورة"
+        holder.ayahCountTextView.text = "${surah.ayahs.size} اية"
         holder.surahNameTextView.text = surah.name
         holder.surahNumberTextView.text = "${surah.number}"
     }

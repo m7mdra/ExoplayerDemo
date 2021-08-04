@@ -1,5 +1,6 @@
 package com.m7mdra.exoplayerdemo
 
+import android.content.Intent
 import android.os.Bundle
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -15,10 +16,14 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        adapter = SurahAdapter(surahList)
+        adapter = SurahAdapter(surahList, onClickListener = { surah ->
+            val intent = Intent(this, PlayerActivity::class.java)
+            intent.putExtra("surah", surah)
+            startActivity(intent)
+        })
         loadData()
         recyclerView.adapter = adapter
-        recyclerView.addItemDecoration(DividerItemDecoration(this,DividerItemDecoration.VERTICAL))
+        recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
     }
 
     private fun loadData() {
