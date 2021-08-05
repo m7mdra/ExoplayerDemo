@@ -3,6 +3,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:gravity="center"
     android:orientation="vertical"
     android:padding="16dp"
@@ -12,29 +13,11 @@
         android:id="@+id/surahNameTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
+        android:layout_marginTop="8dp"
         android:layout_marginBottom="16dp"
-        android:text="سورة السورة"
+        android:text=""
         android:textAppearance="@style/TextAppearance.MaterialComponents.Headline5"
         android:textStyle="bold" />
-
-    <TextView
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-        android:text="العنصر الحالي "
-        android:textAppearance="@style/TextAppearance.MaterialComponents.Body2"
-
-
-        />
-
-    <TextView
-        android:id="@+id/ayahNumberTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="8dp"
-
-        android:text="رقم الاية" />
 
     <TextView
         android:id="@+id/playerStatusTextView"
@@ -45,7 +28,8 @@
 
     <androidx.appcompat.widget.AppCompatSeekBar
         android:layout_width="match_parent"
-
+        android:id="@+id/seekBar"
+        android:max="1000"
 
         android:layout_height="wrap_content"
         android:layout_marginBottom="8dp" />
@@ -85,6 +69,8 @@
     </LinearLayout>
 
     <androidx.recyclerview.widget.RecyclerView
+app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        android:id="@+id/recyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1" />

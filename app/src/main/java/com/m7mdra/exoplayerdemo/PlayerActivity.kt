@@ -1,72 +1,95 @@
 package com.m7mdra.exoplayerdemo
 
-import android.annotation.SuppressLint
 import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.util.Log
+import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
+import androidx.recyclerview.widget.DividerItemDecoration
 import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.Player.MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED
-import com.m7mdra.exoplayerdemo.model.Ayah
+import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
 import com.m7mdra.exoplayerdemo.model.Surah
 import kotlinx.android.synthetic.main.activity_player.*
-import java.security.KeyManagementException
-import java.security.NoSuchAlgorithmException
-import java.security.SecureRandom
-import java.security.cert.X509Certificate
-import javax.net.ssl.HttpsURLConnection
-import javax.net.ssl.SSLContext
-import javax.net.ssl.TrustManager
-import javax.net.ssl.X509TrustManager
+import java.lang.reflect.Type
+
 
 class PlayerActivity : AppCompatActivity() {
-    private lateinit var player: ExoPlayer
-    private val surah: Surah by lazy {
-        intent.getParcelableExtra("surah")!!
+    companion object {
+
+        private const val PROGRESS_BAR_MAX = 1000
     }
-    private val trustAllCerts: Array<TrustManager> = arrayOf<TrustManager>(
-        object : X509TrustManager {
-            @SuppressLint("TrustAllX509TrustManager")
-            override fun checkClientTrusted(chain: Array<out X509Certificate>?, authType: String?) {
 
-            }
+    private lateinit var player: ExoPlayer
+    private val handler = Handler(Looper.getMainLooper())
+    private var surahList = mutableListOf<Surah>()
+    private lateinit var adapter: SurahAdapter
 
-            @SuppressLint("TrustAllX509TrustManager")
-            override fun checkServerTrusted(chain: Array<out X509Certificate>?, authType: String?) {
-                //ignore
-            }
 
-            override fun getAcceptedIssuers(): Array<X509Certificate> {
-                return arrayOf()
-            }
-
+    private fun publishProgress(): Long {
+        val position = player.currentPosition
+        val duration = player.duration
+        if (duration > 0) {
+            val pos = 1000L * position / duration
+            seekBar.progress = pos.toInt()
         }
-    )
+        return position
+
+    }
+
+    private val progressCallback: Runnable = object : Runnable {
+        override fun run() {
+
+            if (player.isPlaying) {
+                val pos = publishProgress()
+                handler.postDelayed(this, 1000 - pos % 1000)
+            }
+        }
+    }
 
     override fun onStop() {
         super.onStop()
         player.release()
     }
 
+    private fun loadData() {
+        val readText = assets.open("data.json").reader().readText()
+        val listType: Type = object : TypeToken<List<Surah>>() {}.type
+        val list: List<Surah> = Gson().fromJson(readText, listType)
+        surahList.addAll(list)
+
+        adapter.notifyDataSetChanged()
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-        initSSL()
-        surahNameTextView.text = surah.name
+        adapter = SurahAdapter(surahList, onClickListener = { index, surah ->
 
+            player.seekTo(index, 0L)
+            player.playWhenReady = true
+        })
+        loadData()
+
+        recyclerView.adapter = adapter
+        recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         player = createExoPlayerInstance()
-        surah.ayahs.map {
-            val mediaItem = MediaItem.Builder()
-                .setTag(it)
-                .setUri(it.audio)
-                .setCustomCacheKey("${surah.number}:${it.numberInSurah}:${it.number}")
-                .build()
-            if(it.numberInSurah==1){
-                listener.onMediaItemTransition(mediaItem,MEDIA_ITEM_TRANSITION_REASON_PLAYLIST_CHANGED)
+        createPlaylist()
+        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                if (!fromUser)
+                    return
+               player.seekTo(positionValue(progress))
             }
-            Log.d("MEGA", "${it.audio}")
 
-            player.addMediaItem(mediaItem)
-        }
+            override fun onStartTrackingTouch(seekBar: SeekBar?) {
+            }
+
+            override fun onStopTrackingTouch(seekBar: SeekBar?) {
+            }
+        })
         player.prepare()
         playPauseButton.setOnClickListener {
             if (player.isPlaying) {
@@ -80,17 +103,17 @@ class PlayerActivity : AppCompatActivity() {
         player.addListener(listener)
     }
 
-    private fun initSSL() {
-        try {
-            val sc: SSLContext = SSLContext.getInstance("TLS")
-            sc.init(null, trustAllCerts, SecureRandom())
-            HttpsURLConnection.setDefaultSSLSocketFactory(sc.getSocketFactory())
-        } catch (e: KeyManagementException) {
-            e.printStackTrace()
-        } catch (e: NoSuchAlgorithmException) {
-            e.printStackTrace()
+    private fun createPlaylist() {
+        val playlist = surahList.map { surah ->
+            MediaItem.Builder()
+                .setUri(surah.audio)
+                .setTag(surah)
+                .build()
         }
+        player.addMediaItems(playlist)
+        player.prepare()
     }
+
 
     private val listener = object : Player.Listener {
         override fun onPlayerError(error: ExoPlaybackException) {
@@ -99,16 +122,24 @@ class PlayerActivity : AppCompatActivity() {
 
         override fun onIsPlayingChanged(isPlaying: Boolean) {
             super.onIsPlayingChanged(isPlaying)
-            playPauseButton.setImageResource(if (isPlaying) R.drawable.ic_baseline_pause_circle_filled_24 else R.drawable.ic_baseline_play_circle_filled_24)
+            playPauseButton.setImageResource(
+                if (isPlaying) {
+                    handler.post(progressCallback)
+                    R.drawable.ic_baseline_pause_circle_filled_24
+                } else {
+                    handler.removeCallbacks(progressCallback)
+                    R.drawable.ic_baseline_play_circle_filled_24
+                }
+            )
         }
 
 
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             super.onMediaItemTransition(mediaItem, reason)
             val item = mediaItem ?: return
-            val ayah = item.playbackProperties?.tag as? Ayah ?: return
-            ayahNumberTextView.text = "اية رقم ${ayah.numberInSurah}"
-
+            val properties = item.playbackProperties ?: return
+            val surah = properties.tag as? Surah ?: return
+            surahNameTextView.text = surah.name
         }
 
 
@@ -127,8 +158,20 @@ class PlayerActivity : AppCompatActivity() {
     private fun createExoPlayerInstance(): SimpleExoPlayer {
         return SimpleExoPlayer.Builder(this)
             .setLoadControl(DefaultLoadControl())
-
+            .setTrackSelector(DefaultTrackSelector(this))
             .build()
     }
+
+    private fun progressBarValue(position: Long): Long {
+        val duration = player.duration
+        return if (duration == C.TIME_UNSET || duration == 0L) 0 else (position * PROGRESS_BAR_MAX / duration)
+    }
+
+    private fun positionValue(progress: Int): Long {
+        val duration = player.getDuration()
+        return if (duration == C.TIME_UNSET) 0 else duration * progress / PROGRESS_BAR_MAX
+    }
+
+
 }
 

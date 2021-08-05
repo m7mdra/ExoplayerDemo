@@ -7,11 +7,15 @@ import kotlinx.android.parcel.Parcelize
 
 @Parcelize
 data class Surah(
-    @SerializedName("ayahs")
-    val ayahs: List<Ayah>,
+
     @SerializedName("name")
     val name: String,
     @SerializedName("number")
     val number: Int,
-
-    ) : Parcelable
+    @SerializedName("numberOfAyahs")
+    val ayatCount:Int
+    ) : Parcelable{
+        val audio:String get() {
+            return  String.format("https://download.quranicaudio.com/quran/mishaari_raashid_al_3afaasee/%03d.mp3",number)
+        }
+    }

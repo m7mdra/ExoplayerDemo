@@ -7,7 +7,7 @@ import com.m7mdra.exoplayerdemo.model.Surah
 
 class SurahAdapter(
     private val list: List<Surah>,
-    private val onClickListener: (Surah) -> Unit = {}
+    private val onClickListener: (Int, Surah) -> Unit = {_,_->}
 ) : RecyclerView.Adapter<SurahViewHolder>() {
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): SurahViewHolder {
         return SurahViewHolder(
@@ -18,9 +18,9 @@ class SurahAdapter(
     override fun onBindViewHolder(holder: SurahViewHolder, position: Int) {
         val surah = list[position]
         holder.rootView.setOnClickListener {
-            onClickListener.invoke(surah)
+            onClickListener.invoke(position, surah)
         }
-        holder.ayahCountTextView.text = "${surah.ayahs.size} اية"
+        holder.ayahCountTextView.text = "${surah.ayatCount} اية"
         holder.surahNameTextView.text = surah.name
         holder.surahNumberTextView.text = "${surah.number}"
     }
