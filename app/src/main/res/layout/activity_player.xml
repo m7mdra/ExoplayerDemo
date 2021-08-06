@@ -45,25 +45,26 @@
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
+            android:id="@+id/previousButton"
+            android:background="?actionBarItemBackground"
             android:src="@drawable/ic_baseline_skip_previous_24" />
 
         <ImageView
             android:id="@+id/playPauseButton"
             android:layout_width="50dp"
             android:layout_height="50dp"
+            android:background="?actionBarItemBackground"
+
             android:src="@drawable/ic_baseline_play_circle_filled_24" />
 
-        <ImageView
-            android:layout_width="50dp"
-            android:layout_height="50dp"
-            android:layout_marginStart="8dp"
-            android:src="@drawable/ic_baseline_stop_circle_24" />
 
         <ImageView
             android:layout_width="40dp"
             android:layout_height="40dp"
             android:layout_marginStart="16dp"
             android:layout_marginEnd="16dp"
+            android:background="?actionBarItemBackground"
+            android:id="@+id/nextButton"
             android:src="@drawable/ic_baseline_skip_next_24" />
 
     </LinearLayout>

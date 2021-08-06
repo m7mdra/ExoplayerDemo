@@ -3,7 +3,6 @@ package com.m7mdra.exoplayerdemo
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.util.Log
 import android.widget.SeekBar
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.DividerItemDecoration
@@ -20,8 +19,10 @@ class PlayerActivity : AppCompatActivity() {
     companion object {
 
         private const val PROGRESS_BAR_MAX = 1000
+        private const val MAX_POSITION_FOR_SEEK_TO_PREVIOUS: Long = 3000
     }
 
+    private lateinit var currentWindow: Timeline.Window
     private lateinit var player: ExoPlayer
     private val handler = Handler(Looper.getMainLooper())
     private var surahList = mutableListOf<Surah>()
@@ -67,7 +68,6 @@ class PlayerActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
         adapter = SurahAdapter(surahList, onClickListener = { index, surah ->
-
             player.seekTo(index, 0L)
             player.playWhenReady = true
         })
@@ -76,7 +76,16 @@ class PlayerActivity : AppCompatActivity() {
         recyclerView.adapter = adapter
         recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
         player = createExoPlayerInstance()
+        currentWindow = Timeline.Window()
         createPlaylist()
+        nextButton.setOnClickListener {
+            next()
+        }
+
+        previousButton.setOnClickListener {
+            previous()
+
+        }
         seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
             override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
                 if (!fromUser)
@@ -133,7 +142,6 @@ class PlayerActivity : AppCompatActivity() {
             )
         }
 
-
         override fun onMediaItemTransition(mediaItem: MediaItem?, reason: Int) {
             super.onMediaItemTransition(mediaItem, reason)
             val item = mediaItem ?: return
@@ -168,10 +176,37 @@ class PlayerActivity : AppCompatActivity() {
     }
 
     private fun positionValue(progress: Int): Long {
-        val duration = player.getDuration()
+        val duration = player.duration
         return if (duration == C.TIME_UNSET) 0 else duration * progress / PROGRESS_BAR_MAX
     }
 
+    private fun previous() {
+        val currentTimeline = player.currentTimeline
+        if (currentTimeline.isEmpty) {
+            return
+        }
+        val currentWindowIndex = player.currentWindowIndex
+        currentTimeline.getWindow(currentWindowIndex, currentWindow)
+        if (currentWindowIndex > 0 && (player.currentPosition <= MAX_POSITION_FOR_SEEK_TO_PREVIOUS
+                    || currentWindow.isDynamic && !currentWindow.isSeekable)
+        ) {
+            player.seekTo(currentWindowIndex - 1, C.TIME_UNSET)
+        } else {
+            player.seekTo(0)
+        }
+    }
 
+    private operator fun next() {
+        val currentTimeline = player.currentTimeline
+        if (currentTimeline.isEmpty) {
+            return
+        }
+        val currentWindowIndex = player.currentWindowIndex
+        if (currentWindowIndex < currentTimeline.windowCount - 1) {
+            player.seekTo(currentWindowIndex + 1, C.TIME_UNSET)
+        } else if (currentTimeline.getWindow(currentWindowIndex, currentWindow).isDynamic) {
+            player.seekTo(currentWindowIndex, C.TIME_UNSET)
+        }
+    }
 }
 
