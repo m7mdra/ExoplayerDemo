@@ -1,118 +1,84 @@
 package com.m7mdra.exoplayerdemo
 
+import android.content.Intent
 import android.os.Bundle
-import android.os.Handler
-import android.os.Looper
-import android.widget.SeekBar
+import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
-import androidx.recyclerview.widget.DividerItemDecoration
-import com.google.android.exoplayer2.*
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
-import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
-import com.m7mdra.exoplayerdemo.model.Surah
 import kotlinx.android.synthetic.main.activity_player.*
-import java.lang.reflect.Type
 
 
 class PlayerActivity : AppCompatActivity() {
-    companion object {
 
-        private const val PROGRESS_BAR_MAX = 1000
-        private const val MAX_POSITION_FOR_SEEK_TO_PREVIOUS: Long = 3000
-    }
-
-    private lateinit var currentWindow: Timeline.Window
-    private lateinit var player: ExoPlayer
-    private val handler = Handler(Looper.getMainLooper())
-    private var surahList = mutableListOf<Surah>()
-    private lateinit var adapter: SurahAdapter
-
-
-    private fun publishProgress(): Long {
-        val position = player.currentPosition
-        val duration = player.duration
-        if (duration > 0) {
-            val pos = 1000L * position / duration
-            seekBar.progress = pos.toInt()
-        }
-        return position
-
-    }
-
-    private val progressCallback: Runnable = object : Runnable {
-        override fun run() {
-
-            if (player.isPlaying) {
-                val pos = publishProgress()
-                handler.postDelayed(this, 1000 - pos % 1000)
-            }
-        }
-    }
-
-    override fun onStop() {
-        super.onStop()
-        player.release()
-    }
-
-    private fun loadData() {
-        val readText = assets.open("data.json").reader().readText()
-        val listType: Type = object : TypeToken<List<Surah>>() {}.type
-        val list: List<Surah> = Gson().fromJson(readText, listType)
-        surahList.addAll(list)
-
-        adapter.notifyDataSetChanged()
-    }
-
+    var playing = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_player)
-        adapter = SurahAdapter(surahList, onClickListener = { index, surah ->
-            player.seekTo(index, 0L)
-            player.playWhenReady = true
-        })
-        loadData()
 
-        recyclerView.adapter = adapter
-        recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
-        player = createExoPlayerInstance()
-        currentWindow = Timeline.Window()
-        createPlaylist()
+
+        playPauseButton.setOnClickListener {
+            Log.d("TAG", "onCreate: $playing")
+            val intent = Intent(this, PlayerService::class.java)
+            if (playing) {
+                intent.action = PlayerEvents.PAUSE
+            } else {
+                intent.action = PlayerEvents.PLAY
+            }
+            playing = !playing
+            startService(intent)
+        }
         nextButton.setOnClickListener {
-            next()
+            val intent = Intent(this, PlayerService::class.java)
+            intent.action = PlayerEvents.NEXT
+            startService(intent)
         }
 
         previousButton.setOnClickListener {
-            previous()
+            val intent = Intent(this, PlayerService::class.java)
+            intent.action = PlayerEvents.PREVIOUS
+            startService(intent)
 
         }
-        seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
-            override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-                if (!fromUser)
-                    return
-               player.seekTo(positionValue(progress))
-            }
 
-            override fun onStartTrackingTouch(seekBar: SeekBar?) {
-            }
+        /*  recyclerView.adapter = adapter
+          recyclerView.addItemDecoration(DividerItemDecoration(this, DividerItemDecoration.VERTICAL))
+          player = createExoPlayerInstance()
+          currentWindow = Timeline.Window()
+          createPlaylist()
+          nextButton.setOnClickListener {
+              next()
+          }
 
-            override fun onStopTrackingTouch(seekBar: SeekBar?) {
-            }
-        })
-        player.prepare()
-        playPauseButton.setOnClickListener {
-            if (player.isPlaying) {
-                player.pause()
-            } else {
-                player.playWhenReady = true
-            }
-        }
+          previousButton.setOnClickListener {
+              previous()
+
+          }
+          seekBar.setOnSeekBarChangeListener(object : SeekBar.OnSeekBarChangeListener {
+              override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+                  if (!fromUser)
+                      return
+                 player.seekTo(positionValue(progress))
+              }
+
+              override fun onStartTrackingTouch(seekBar: SeekBar?) {
+              }
+
+              override fun onStopTrackingTouch(seekBar: SeekBar?) {
+              }
+          })
+          player.prepare()
+          playPauseButton.setOnClickListener {
+              if (player.isPlaying) {
+                  player.pause()
+              } else {
+                  player.playWhenReady = true
+              }
+          }
 
 
-        player.addListener(listener)
+          player.addListener(listener)*/
     }
 
-    private fun createPlaylist() {
+/*    private fun createPlaylist() {
         val playlist = surahList.map { surah ->
             MediaItem.Builder()
                 .setUri(surah.audio)
@@ -207,6 +173,6 @@ class PlayerActivity : AppCompatActivity() {
         } else if (currentTimeline.getWindow(currentWindowIndex, currentWindow).isDynamic) {
             player.seekTo(currentWindowIndex, C.TIME_UNSET)
         }
-    }
+    }*/
 }
 
